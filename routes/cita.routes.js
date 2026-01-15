@@ -6,11 +6,21 @@ const Cita = require("../models/Cita.model");
 const { isAuthenticated } = require("../middleware/jwt.middleware.js");
 
 
-// GET todas las citas del usuario autenticado
+// GET todas las citas del usuario autenticado o todas si es admin
 router.get("/", isAuthenticated, async (req, res) => {
   try {
     const usuarioId = req.payload._id;
-    const citas = await Cita.find({ usuario: usuarioId }).sort({ fecha: 1 });
+    const esAdmin = req.payload.role === "ADMIN";
+    
+    let citas;
+    if (esAdmin) {
+      // Admin ve todas las citas de todos los usuarios
+      citas = await Cita.find().sort({ fecha: 1 });
+    } else {
+      // Usuario normal solo ve sus propias citas
+      citas = await Cita.find({ usuario: usuarioId }).sort({ fecha: 1 });
+    }
+    
     res.status(200).json(citas);
   } catch (error) {
     console.error(error);
