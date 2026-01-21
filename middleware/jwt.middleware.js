@@ -23,7 +23,17 @@ function getTokenFromHeaders(req) {
   return null;
 }
 
+// Middleware to check if user is an admin
+function isAdmin(req, res, next) {
+  if (req.payload && req.payload.role === "ADMIN") {
+    next();
+  } else {
+    res.status(403).json({ message: "Acceso denegado. Se requieren privilegios de administrador." });
+  }
+}
+
 // Export the middleware so that we can use it to create protected routes
 module.exports = {
   isAuthenticated,
+  isAdmin,
 };

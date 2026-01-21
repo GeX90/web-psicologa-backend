@@ -65,7 +65,9 @@ router.get("/", isAuthenticated, async (req, res) => {
 
     let citas;
     if (esAdmin) {
-      citas = await Cita.find().sort({ fecha: 1 });
+      citas = await Cita.find()
+        .populate("usuario", "name email")
+        .sort({ fecha: 1 });
     } else {
       citas = await Cita.find({ usuario: usuarioId }).sort({ fecha: 1 });
     }
