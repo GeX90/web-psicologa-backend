@@ -207,11 +207,6 @@ router.put("/:citaId", isAuthenticated, async (req, res) => {
     const usuarioId = req.payload._id;
     const esAdmin = req.payload.role === "ADMIN";
 
-    // LOG TEMPORAL - para verificar el token
-    console.log("PUT /api/citas/:citaId - Payload:", req.payload);
-    console.log("PUT /api/citas/:citaId - Role:", req.payload.role);
-    console.log("PUT /api/citas/:citaId - esAdmin:", esAdmin);
-
     const cita = await Cita.findById(citaId);
 
     if (!cita) {
@@ -275,11 +270,6 @@ router.delete("/:citaId", isAuthenticated, async (req, res) => {
     const { citaId } = req.params;
     const usuarioId = req.payload._id;
     const esAdmin = req.payload.role === "ADMIN";
-
-    // LOG TEMPORAL - para verificar el token
-    console.log("DELETE /api/citas/:citaId - Payload:", req.payload);
-    console.log("DELETE /api/citas/:citaId - Role:", req.payload.role);
-    console.log("DELETE /api/citas/:citaId - esAdmin:", esAdmin);
 
     const cita = await Cita.findById(citaId);
 
