@@ -205,6 +205,7 @@ router.put("/:citaId", isAuthenticated, async (req, res) => {
     const { citaId } = req.params;
     const { fecha, hora, motivo, notas } = req.body;
     const usuarioId = req.payload._id;
+    const esAdmin = req.payload.role === "ADMIN";
 
     const cita = await Cita.findById(citaId);
 
@@ -212,13 +213,14 @@ router.put("/:citaId", isAuthenticated, async (req, res) => {
       return res.status(404).json({ message: "Cita no encontrada" });
     }
 
-    const esAdmin = req.payload.role === "ADMIN";
+    // Verificar permisos: el usuario debe ser dueño de la cita o ser admin
     if (cita.usuario.toString() !== usuarioId.toString() && !esAdmin) {
       return res
         .status(403)
         .json({ message: "No tienes permiso para actualizar esta cita" });
     }
 
+    // Solo aplicar restricción de 48 horas a usuarios normales, NO a admins
     if (!esAdmin) {
       const ahora = new Date();
       const horasRestantes = (cita.fecha - ahora) / (1000 * 60 * 60);
@@ -248,6 +250,11 @@ router.put("/:citaId", isAuthenticated, async (req, res) => {
 
     await cita.save();
 
+    // Populate para devolver información del usuario si es admin
+    if (esAdmin) {
+      await cita.populate("usuario", "name email");
+    }
+
     res.status(200).json(cita);
   } catch (error) {
     console.error(error);
@@ -261,6 +268,7 @@ router.delete("/:citaId", isAuthenticated, async (req, res) => {
   try {
     const { citaId } = req.params;
     const usuarioId = req.payload._id;
+    const esAdmin = req.payload.role === "ADMIN";
 
     const cita = await Cita.findById(citaId);
 
@@ -268,13 +276,14 @@ router.delete("/:citaId", isAuthenticated, async (req, res) => {
       return res.status(404).json({ message: "Cita no encontrada" });
     }
 
-    const esAdmin = req.payload.role === "ADMIN";
+    // Verificar permisos: el usuario debe ser dueño de la cita o ser admin
     if (cita.usuario.toString() !== usuarioId.toString() && !esAdmin) {
       return res
         .status(403)
         .json({ message: "No tienes permiso para eliminar esta cita" });
     }
 
+    // Solo aplicar restricción de 48 horas a usuarios normales, NO a admins
     if (!esAdmin) {
       const ahora = new Date();
       const horasRestantes = (cita.fecha - ahora) / (1000 * 60 * 60);
