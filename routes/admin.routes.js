@@ -6,6 +6,73 @@ const Cita = require("../models/Cita.model");
 
 const { isAuthenticated, isAdmin } = require("../middleware/jwt.middleware.js");
 
+// GET /api/admin/stats - Obtener estadísticas del dashboard (solo admin)
+router.get("/stats", isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
+    // Inicio de la semana (lunes)
+    const weekStart = new Date(now);
+    const dayOfWeek = now.getDay();
+    const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+    weekStart.setDate(now.getDate() + diff);
+    weekStart.setHours(0, 0, 0, 0);
+
+    // Fin de la semana (domingo)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 7);
+
+    // Inicio y fin del mes
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Contar citas hoy
+    const citasHoy = await Cita.countDocuments({
+      fecha: { $gte: todayStart, $lt: todayEnd },
+      estado: { $ne: 'Cancelada' }
+    });
+
+    // Contar citas esta semana
+    const citasSemana = await Cita.countDocuments({
+      fecha: { $gte: weekStart, $lt: weekEnd },
+      estado: { $ne: 'Cancelada' }
+    });
+
+    // Contar citas este mes
+    const citasMes = await Cita.countDocuments({
+      fecha: { $gte: monthStart, $lte: monthEnd },
+      estado: { $ne: 'Cancelada' }
+    });
+
+    // Obtener próxima cita programada
+    const proximaCita = await Cita.findOne({
+      fecha: { $gte: now },
+      estado: { $ne: 'Cancelada' }
+    })
+      .populate("usuario", "name email")
+      .sort({ fecha: 1 });
+
+    // Contar pacientes activos (usuarios con al menos una cita)
+    const pacientesActivos = await Cita.distinct("usuario", {
+      estado: { $ne: 'Cancelada' }
+    });
+
+    res.status(200).json({
+      citasHoy,
+      citasSemana,
+      citasMes,
+      proximaCita,
+      pacientesActivos: pacientesActivos.length
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener estadísticas", error: error.message });
+  }
+});
+
 // GET /api/admin/users - Obtener todos los usuarios (solo admin)
 router.get("/users", isAuthenticated, isAdmin, async (req, res) => {
   try {
