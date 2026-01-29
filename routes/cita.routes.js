@@ -311,8 +311,8 @@ router.delete("/:citaId", isAuthenticated, async (req, res) => {
   }
 });
 
-// GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios
-router.get("/disponibilidad", isAuthenticated, async (req, res) => {
+// GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
+router.get("/disponibilidad", async (req, res) => {
   try {
     const { fechaInicio, fechaFin } = req.query;
     
