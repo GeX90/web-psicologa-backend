@@ -326,11 +326,52 @@ router.get("/test", (req, res) => {
 });
 
 // GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
-router.get("/disponibilidad", (req, res) => {
-  // Endpoint ultra simple que no puede fallar
-  // Devolver array vacío siempre
-  console.log("GET /api/citas/disponibilidad called");
-  res.json([]);
+router.get("/disponibilidad", async (req, res) => {
+  try {
+    console.log("=== GET /api/citas/disponibilidad ===");
+    
+    // Verificar conexión a MongoDB
+    const connectionState = mongoose.connection.readyState;
+    console.log("MongoDB state:", connectionState, "(1=connected)");
+    
+    if (connectionState !== 1) {
+      console.log("MongoDB no conectado, devolviendo []");
+      return res.json([]);
+    }
+    
+    // Verificar modelo
+    if (!Disponibilidad) {
+      console.log("Modelo Disponibilidad no disponible, devolviendo []");
+      return res.json([]);
+    }
+    
+    const { fechaInicio, fechaFin } = req.query;
+    console.log("Query params:", { fechaInicio, fechaFin });
+    
+    const query = { disponible: true };
+    if (fechaInicio && fechaFin) {
+      query.fecha = {
+        $gte: new Date(fechaInicio),
+        $lte: new Date(fechaFin)
+      };
+    }
+    
+    console.log("Ejecutando query:", JSON.stringify(query));
+    
+    const disponibilidad = await Disponibilidad.find(query).sort({ fecha: 1, hora: 1 }).lean();
+    
+    console.log(`✓ Encontrados ${disponibilidad.length} registros`);
+    if (disponibilidad.length > 0) {
+      console.log("Primer registro:", JSON.stringify(disponibilidad[0]));
+    }
+    
+    res.json(disponibilidad);
+    
+  } catch (error) {
+    console.error("ERROR en disponibilidad:", error.message);
+    console.error("Stack:", error.stack);
+    res.json([]);
+  }
 });
 
 module.exports = router;

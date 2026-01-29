@@ -31,18 +31,6 @@ app.use(async (req, res, next) => {
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);
 
-// Endpoint de prueba directo (antes de las rutas)
-app.get("/api/test-direct", (req, res) => {
-    console.log("Test direct endpoint called");
-    res.json({ message: "Direct endpoint works", timestamp: new Date() });
-});
-
-// Endpoint de disponibilidad directo (sin pasar por rutas)
-app.get("/api/citas/disponibilidad", (req, res) => {
-    console.log("Direct disponibilidad endpoint called");
-    res.json([]);
-});
-
 // 👇 Start handling routes here
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
