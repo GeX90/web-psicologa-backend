@@ -1,6 +1,6 @@
 # Neuro Espacio - Backend API
 
-API REST para gestión de citas neuropsicológicas con autenticación JWT y roles de usuario.
+API REST para gestión de citas neuropsicológicas con autenticación JWT, sistema de roles y gestión de disponibilidad.
 
 🌐 **Demo**: [https://neuro-espacio.vercel.app/](https://neuro-espacio.vercel.app/)
 
@@ -34,32 +34,44 @@ npm start    # Producción
 ## 📡 API Endpoints
 
 ### Autenticación (`/auth`)
-- `POST /signup` - Registro
+- `POST /signup` - Registro de usuario
 - `POST /login` - Inicio de sesión
-- `GET /verify` - Verificación JWT
+- `GET /verify` - Verificación de token JWT
 
 ### Citas (`/api/citas`) 🔒
 - `GET /` - Listar citas propias
-- `POST /` - Crear cita
-- `GET /:id` - Detalle de cita
-- `PUT /:id` - Editar (48h mínimo)
-- `DELETE /:id` - Cancelar (48h mínimo)
+- `POST /` - Crear nueva cita
+- `GET /:id` - Ver detalles de cita
+- `PUT /:id` - Editar cita (48h anticipación)
+- `DELETE /:id` - Cancelar cita (48h anticipación)
 
 ### Admin (`/api/admin`) 🔐
-- `GET /users` - Todos los usuarios
-- `GET /citas` - Todas las citas
-- Editar/eliminar sin restricciones
+- `GET /stats` - Estadísticas del dashboard
+- `GET /users` - Lista de todos los usuarios
+- `GET /users/:userId` - Detalle de usuario
+- `PUT /users/:userId` - Editar usuario
+- `DELETE /users/:userId` - Eliminar usuario
+- `GET /citas` - Todas las citas del sistema
+- `PUT /citas/:citaId` - Editar cualquier cita
+- `DELETE /citas/:citaId` - Eliminar cualquier cita
+- `GET /disponibilidad` - Ver disponibilidad de horarios
+- `POST /disponibilidad` - Crear disponibilidad
+- `PUT /disponibilidad/:id` - Actualizar disponibilidad
+- `DELETE /disponibilidad/:id` - Eliminar disponibilidad
 
-## � Roles
+## 👤 Roles
 
 **Usuario (USER)**
 - Gestionar citas propias
 - Editar/cancelar con 48h de anticipación
+- Ver calendario de disponibilidad
 
 **Administrador (ADMIN)**
-- Gestionar todos los usuarios
-- Editar/eliminar cualquier cita sin restricciones
-- Acceso a estadísticas y calendario completo
+- Gestión completa de usuarios
+- Gestión completa de citas sin restricciones
+- Configurar disponibilidad de horarios
+- Acceso a estadísticas y métricas
+- Panel de control administrativo
 
 ## 🔒 Autenticación
 
