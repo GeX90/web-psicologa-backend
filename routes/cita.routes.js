@@ -149,6 +149,36 @@ router.get("/available/:date", isAuthenticated, async (req, res) => {
   }
 });
 
+// GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
+// IMPORTANTE: Esta ruta debe estar ANTES de /:citaId para evitar que el parámetro dinámico la capture
+router.get("/disponibilidad", async (req, res) => {
+  try {
+    console.log("GET /api/citas/disponibilidad - Endpoint público llamado");
+    
+    if (!Disponibilidad) {
+      console.error("Modelo Disponibilidad no está disponible");
+      return res.status(503).json({ 
+        message: "Servicio no disponible temporalmente",
+        error: "Modelo Disponibilidad no cargado" 
+      });
+    }
+
+    // Obtener todas las fechas/horas marcadas como disponibles
+    const disponibles = await Disponibilidad.find({ disponible: true })
+      .sort({ fecha: 1, hora: 1 })
+      .lean();
+
+    console.log(`Disponibilidad encontrada: ${disponibles.length} registros`);
+    res.status(200).json(disponibles);
+  } catch (error) {
+    console.error("Error en GET /api/citas/disponibilidad:", error);
+    res.status(500).json({ 
+      message: "Error al obtener disponibilidad",
+      error: error.message 
+    });
+  }
+});
+
 router.get("/:citaId", isAuthenticated, async (req, res) => {
   try {
     const { citaId } = req.params;
@@ -325,54 +355,5 @@ router.get("/test", (req, res) => {
   res.status(200).json({ message: "Test endpoint works!", timestamp: new Date() });
 });
 
-// GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
-router.get("/disponibilidad", async (req, res) => {
-  // Envolver TODO en try-catch para nunca devolver 500
-  try {
-    console.log("=== GET /api/citas/disponibilidad ===");
-    
-    // Verificar conexión a MongoDB
-    const connectionState = mongoose.connection.readyState;
-    console.log("MongoDB state:", connectionState, "(1=connected)");
-    
-    if (connectionState !== 1) {
-      console.log("MongoDB no conectado, devolviendo []");
-      return res.status(200).json([]);
-    }
-    
-    // Verificar modelo
-    if (!Disponibilidad) {
-      console.log("Modelo Disponibilidad no disponible, devolviendo []");
-      return res.status(200).json([]);
-    }
-    
-    const { fechaInicio, fechaFin } = req.query;
-    console.log("Query params:", { fechaInicio, fechaFin });
-    
-    const query = { disponible: true };
-    if (fechaInicio && fechaFin) {
-      query.fecha = {
-        $gte: new Date(fechaInicio),
-        $lte: new Date(fechaFin)
-      };
-    }
-    
-    console.log("Ejecutando query:", JSON.stringify(query));
-    
-    const disponibilidad = await Disponibilidad.find(query).sort({ fecha: 1, hora: 1 }).lean();
-    
-    console.log(`✓ Encontrados ${disponibilidad.length} registros`);
-    if (disponibilidad.length > 0) {
-      console.log("Primer registro:", JSON.stringify(disponibilidad[0]));
-    }
-    
-    return res.status(200).json(disponibilidad);
-    
-  } catch (error) {
-    console.error("ERROR en disponibilidad:", error.message);
-    console.error("Stack:", error.stack);
-    return res.status(200).json([]);
-  }
-});
-
 module.exports = router;
+
