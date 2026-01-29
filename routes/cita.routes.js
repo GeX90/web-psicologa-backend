@@ -314,29 +314,52 @@ router.delete("/:citaId", isAuthenticated, async (req, res) => {
 // GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
 router.get("/disponibilidad", async (req, res) => {
   try {
+    console.log("=== Iniciando endpoint /api/citas/disponibilidad ===");
+    
     // Verificar que el modelo existe
     if (!Disponibilidad) {
-      console.error("Modelo Disponibilidad no está disponible");
+      console.error("ERROR: Modelo Disponibilidad no está disponible");
       return res.status(200).json([]);
     }
 
+    console.log("Modelo Disponibilidad cargado correctamente");
+
     const { fechaInicio, fechaFin } = req.query;
+    console.log("Query params:", { fechaInicio, fechaFin });
     
     const query = { disponible: true };
     if (fechaInicio && fechaFin) {
-      query.fecha = {
-        $gte: new Date(fechaInicio),
-        $lte: new Date(fechaFin)
-      };
+      try {
+        const startDate = new Date(fechaInicio);
+        const endDate = new Date(fechaFin);
+        
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.error("Fechas inválidas:", { fechaInicio, fechaFin });
+          return res.status(200).json([]);
+        }
+        
+        query.fecha = {
+          $gte: startDate,
+          $lte: endDate
+        };
+      } catch (dateError) {
+        console.error("Error procesando fechas:", dateError);
+        return res.status(200).json([]);
+      }
     }
 
-    console.log("Query disponibilidad:", JSON.stringify(query));
-    const disponibilidad = await Disponibilidad.find(query).sort({ fecha: 1, hora: 1 });
-    console.log(`Encontrados ${disponibilidad.length} registros de disponibilidad`);
+    console.log("Query construida:", JSON.stringify(query));
+    
+    const disponibilidad = await Disponibilidad.find(query).sort({ fecha: 1, hora: 1 }).lean();
+    console.log(`Encontrados ${disponibilidad ? disponibilidad.length : 0} registros de disponibilidad`);
     
     res.status(200).json(disponibilidad || []);
   } catch (error) {
-    console.error("Error en /api/citas/disponibilidad:", error.message, error.stack);
+    console.error("ERROR CRÍTICO en /api/citas/disponibilidad:");
+    console.error("Mensaje:", error.message);
+    console.error("Stack:", error.stack);
+    console.error("Nombre:", error.name);
+    
     // Devolver array vacío en lugar de error para no romper el frontend
     res.status(200).json([]);
   }
