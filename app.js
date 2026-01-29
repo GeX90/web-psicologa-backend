@@ -11,22 +11,23 @@ const app = express();
 // ℹ️ Connects to the database
 const { connectDB } = require("./db");
 
-// Connect to DB on startup
-connectDB().catch(err => {
-    console.error("Error inicial de conexión a MongoDB:", err);
+// Connect to DB on startup (no bloquear si falla)
+connectDB().then(() => {
+    console.log("✓ Conexión inicial a MongoDB exitosa");
+}).catch(err => {
+    console.error("✗ Error inicial de conexión a MongoDB:", err.message);
 });
 
-// Each time a request is made, ensure DB is connected
-app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        next();
-    } catch (e) {
-        console.error("Error en middleware de conexión:", e.message);
-        // No bloquear la request, solo logear el error
-        next();
-    }
-});
+// NO usar middleware de conexión automática - causa errores 500
+// app.use(async (req, res, next) => {
+//     try {
+//         await connectDB();
+//         next();
+//     } catch (e) {
+//         console.error("Error en middleware de conexión:", e.message);
+//         next();
+//     }
+// });
 
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);

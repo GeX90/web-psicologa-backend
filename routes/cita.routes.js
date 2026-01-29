@@ -327,6 +327,7 @@ router.get("/test", (req, res) => {
 
 // GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
 router.get("/disponibilidad", async (req, res) => {
+  // Envolver TODO en try-catch para nunca devolver 500
   try {
     console.log("=== GET /api/citas/disponibilidad ===");
     
@@ -336,13 +337,13 @@ router.get("/disponibilidad", async (req, res) => {
     
     if (connectionState !== 1) {
       console.log("MongoDB no conectado, devolviendo []");
-      return res.json([]);
+      return res.status(200).json([]);
     }
     
     // Verificar modelo
     if (!Disponibilidad) {
       console.log("Modelo Disponibilidad no disponible, devolviendo []");
-      return res.json([]);
+      return res.status(200).json([]);
     }
     
     const { fechaInicio, fechaFin } = req.query;
@@ -365,12 +366,12 @@ router.get("/disponibilidad", async (req, res) => {
       console.log("Primer registro:", JSON.stringify(disponibilidad[0]));
     }
     
-    res.json(disponibilidad);
+    return res.status(200).json(disponibilidad);
     
   } catch (error) {
     console.error("ERROR en disponibilidad:", error.message);
     console.error("Stack:", error.stack);
-    res.json([]);
+    return res.status(200).json([]);
   }
 });
 
