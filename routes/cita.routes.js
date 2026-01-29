@@ -325,10 +325,11 @@ router.get("/disponibilidad", async (req, res) => {
     }
 
     const disponibilidad = await Disponibilidad.find(query).sort({ fecha: 1, hora: 1 });
-    res.status(200).json(disponibilidad);
+    res.status(200).json(disponibilidad || []);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener disponibilidad", error: error.message });
+    console.error("Error en /api/citas/disponibilidad:", error);
+    // Devolver array vacío en lugar de error para no romper el frontend
+    res.status(200).json([]);
   }
 });
 
