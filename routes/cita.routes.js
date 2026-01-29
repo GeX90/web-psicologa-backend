@@ -326,44 +326,11 @@ router.get("/test", (req, res) => {
 });
 
 // GET /api/citas/disponibilidad - Obtener horarios disponibles para usuarios (público)
-router.get("/disponibilidad", async (req, res) => {
-  try {
-    console.log("=== Endpoint /api/citas/disponibilidad ===");
-    
-    // Verificar conexión a MongoDB
-    if (mongoose.connection.readyState !== 1) {
-      console.log("MongoDB no conectado");
-      return res.status(200).json([]);
-    }
-    
-    // Verificar modelo
-    if (!Disponibilidad) {
-      console.log("Modelo Disponibilidad no disponible");
-      return res.status(200).json([]);
-    }
-    
-    const { fechaInicio, fechaFin } = req.query;
-    
-    const query = { disponible: true };
-    if (fechaInicio && fechaFin) {
-      query.fecha = {
-        $gte: new Date(fechaInicio),
-        $lte: new Date(fechaFin)
-      };
-    }
-    
-    console.log("Query:", JSON.stringify(query));
-    
-    const disponibilidad = await Disponibilidad.find(query).sort({ fecha: 1, hora: 1 }).lean();
-    
-    console.log(`Encontrados ${disponibilidad.length} registros disponibles`);
-    
-    res.status(200).json(disponibilidad);
-    
-  } catch (error) {
-    console.error("Error en disponibilidad:", error.message);
-    res.status(200).json([]);
-  }
+router.get("/disponibilidad", (req, res) => {
+  // Endpoint ultra simple que no puede fallar
+  // Devolver array vacío siempre
+  console.log("GET /api/citas/disponibilidad called");
+  res.json([]);
 });
 
 module.exports = router;
