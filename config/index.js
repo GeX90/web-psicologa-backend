@@ -21,7 +21,7 @@ module.exports = (app) => {
   // Services like Fly use something called a proxy and you need to add this to your server
   app.set("trust proxy", 1);
 
-  // MANUAL CORS HEADERS - Más compatible con Vercel
+  // CORS DEBE SER EL PRIMER MIDDLEWARE
   app.use((req, res, next) => {
     const allowedOrigins = [
       FRONTEND_URL,
@@ -32,22 +32,33 @@ module.exports = (app) => {
     ];
     
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    
+    console.log('Request from origin:', origin);
+    console.log('Request method:', req.method);
+    console.log('Request path:', req.path);
+    
+    // Siempre establecer headers CORS si el origin está permitido
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+      res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+    } else if (!origin) {
+      // Requests sin origin (como Postman, curl, etc)
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
     }
     
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-    res.setHeader('Access-Control-Expose-Headers', 'Authorization');
-    
-    // Handle preflight OPTIONS request
+    // Manejar preflight OPTIONS
     if (req.method === 'OPTIONS') {
-      res.status(204).end();
-      return;
+      console.log('Handling OPTIONS preflight');
+      return res.status(204).end();
     }
     
     next();
+  });
   });
 
   // In development environment the app logs
