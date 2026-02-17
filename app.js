@@ -22,16 +22,9 @@ connectDB().then(() => {
     console.error("✗ Error inicial de conexión a MongoDB:", err.message);
 });
 
-// NO usar middleware de conexión automática - causa errores 500
-// app.use(async (req, res, next) => {
-//     try {
-//         await connectDB();
-//         next();
-//     } catch (e) {
-//         console.error("Error en middleware de conexión:", e.message);
-//         next();
-//     }
-// });
+// 🔌 Middleware para asegurar conexión a MongoDB en cada request
+const { ensureDBConnection } = require("./middleware/db.middleware");
+app.use(ensureDBConnection);
 
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);
