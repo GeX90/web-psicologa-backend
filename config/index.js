@@ -59,7 +59,6 @@ module.exports = (app) => {
     
     next();
   });
-  });
 
   // In development environment the app logs
   app.use(logger("dev"));
