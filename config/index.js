@@ -21,36 +21,34 @@ module.exports = (app) => {
   // Services like Fly use something called a proxy and you need to add this to your server
   app.set("trust proxy", 1);
 
-  // controls a very specific header to pass headers from the frontend
-  app.use(
-    cors({
-      origin: function (origin, callback) {
-        const allowedOrigins = [
-          FRONTEND_URL, 
-          "https://neuro-espacio.vercel.app", 
-          "https://beatrizdemergelinapsicologa.vercel.app", 
-          "http://localhost:5173",
-          "http://localhost:3000"
-        ];
-        
-        // Permitir requests sin origin (como mobile apps, curl, etc)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-          callback(null, true);
-        } else {
-          console.log('Origin no permitido:', origin);
-          callback(null, false);
-        }
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-      exposedHeaders: ['Authorization'],
-      preflightContinue: false,
-      optionsSuccessStatus: 204
-    })
-  );
+  // MANUAL CORS HEADERS - Más compatible con Vercel
+  app.use((req, res, next) => {
+    const allowedOrigins = [
+      FRONTEND_URL,
+      "https://neuro-espacio.vercel.app",
+      "https://beatrizdemergelinapsicologa.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:3000"
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
+    
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+    
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    
+    next();
+  });
 
   // In development environment the app logs
   app.use(logger("dev"));

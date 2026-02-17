@@ -32,6 +32,11 @@ connectDB().then(() => {
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);
 
+// Handler explícito para OPTIONS (preflight) en todas las rutas
+app.options('*', (req, res) => {
+  res.status(204).end();
+});
+
 // 👇 Start handling routes here
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
