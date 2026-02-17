@@ -29,7 +29,8 @@ module.exports = (app) => {
           FRONTEND_URL, 
           "https://neuro-espacio.vercel.app", 
           "https://beatrizdemergelinapsicologa.vercel.app", 
-          "http://localhost:5173"
+          "http://localhost:5173",
+          "http://localhost:3000"
         ];
         
         // Permitir requests sin origin (como mobile apps, curl, etc)
@@ -43,8 +44,11 @@ module.exports = (app) => {
         }
       },
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization']
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+      exposedHeaders: ['Authorization'],
+      preflightContinue: false,
+      optionsSuccessStatus: 204
     })
   );
 
