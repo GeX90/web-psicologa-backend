@@ -6,25 +6,9 @@ if (!process.env.MONGODB_URI) {
   require("dotenv").config();
 }
 
-
 // Handles http requests (express is node js framework)
-// https://www.npmjs.com/package/express
 const express = require("express");
-
 const app = express();
-
-// ℹ️ Connects to the database
-// La conexión real se hace en el middleware ensureDBConnection en cada request.
-// Esto evita que en Vercel las peticiones lleguen antes de tener conexión.
-const { connectDB } = require("./db");
-connectDB().catch(err => {
-    console.error("✗ Error inicial de conexión a MongoDB:", err.message);
-    // No lanzar - el middleware reintentará en cada request
-});
-
-// 🔌 Middleware para asegurar conexión a MongoDB en cada request
-const { ensureDBConnection } = require("./middleware/db.middleware");
-app.use(ensureDBConnection);
 
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);

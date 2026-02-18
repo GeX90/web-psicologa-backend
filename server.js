@@ -1,3 +1,4 @@
+const { connectDB } = require("./db");
 const app = require("./app");
 
 // ℹ️ Sets the PORT for our app to have access to it. If no env has been set, we hard code it to 5005
@@ -5,10 +6,30 @@ const PORT = process.env.PORT || 5005;
 
 // Solo iniciar el servidor si no estamos en Vercel
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Server listening on http://localhost:${PORT}`);
-  });
+  // En local, conectar primero y luego escuchar
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server listening on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error("Failed to connect to MongoDB:", err.message);
+      process.exit(1);
+    });
 }
 
-// Exportar para Vercel
-module.exports = app;
+// Exportar para Vercel: wrapper async que FUERZA la conexión DB
+// antes de que Express procese cualquier request
+module.exports = async (req, res) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error("❌ Vercel handler: DB connection failed:", err.message);
+    res.statusCode = 503;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ message: "Database connection failed", error: err.message }));
+    return;
+  }
+  return app(req, res);
+};
