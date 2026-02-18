@@ -1,22 +1,18 @@
 const mongoose = require("mongoose");
 
-const MONGO_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/neuro-espacio";
-
-console.log("🔧 MONGODB_URI definido:", !!process.env.MONGODB_URI);
-
-if (!MONGO_URI) {
-  throw new Error("❌ MONGODB_URI is not defined in environment variables");
-}
-
 /**
  * Conecta a MongoDB de forma fiable en Vercel serverless.
- * - Si ya está conectado (readyState 1), retorna inmediatamente.
- * - Si está conectando (readyState 2), espera a que termine.
- * - Si está desconectado (0 o 3), conecta de nuevo.
- * - Después de conectar, hace un ping real para verificar.
+ * Lee MONGODB_URI al momento de conectar (no al cargar el módulo)
+ * para asegurar que dotenv ya haya cargado las variables.
  */
 async function connectDB() {
+  const MONGO_URI =
+    process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/neuro-espacio";
+
+  if (!MONGO_URI) {
+    throw new Error("❌ MONGODB_URI is not defined in environment variables");
+  }
+
   const state = mongoose.connection.readyState;
 
   // 1 = connected
@@ -46,20 +42,28 @@ async function connectDB() {
 
   // 0 = disconnected, 3 = disconnecting — conectar
   console.log("🔗 Conectando a MongoDB... (readyState:", state, ")");
+  console.log("🔗 MONGODB_URI definido:", !!process.env.MONGODB_URI);
 
-  await mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-    connectTimeoutMS: 10000,
-    maxPoolSize: 10,
-    minPoolSize: 1,
-    retryWrites: true,
-    w: "majority",
-  });
+  try {
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      retryWrites: true,
+      w: "majority",
+    });
 
-  // Verificar que la conexión funciona con un ping real
-  await mongoose.connection.db.admin().ping();
-  console.log("✓ MongoDB conectado y verificado con ping");
+    // Verificar que la conexión funciona con un ping real
+    await mongoose.connection.db.admin().ping();
+    console.log("✓ MongoDB conectado y verificado con ping");
+  } catch (err) {
+    console.error("✗ Error conectando a MongoDB:", err.message);
+    // Si falló, desconectar limpiamente para poder reintentar
+    try { await mongoose.disconnect(); } catch (_) {}
+    throw err;
+  }
 
   return mongoose;
 }

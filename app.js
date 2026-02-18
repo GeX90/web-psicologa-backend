@@ -1,11 +1,3 @@
-// ℹ️ Gets access to environment variables/settings
-// https://www.npmjs.com/package/dotenv
-require("dotenv").config({ path: ".env.local" });
-// Fallback to .env if .env.local doesn't exist
-if (!process.env.MONGODB_URI) {
-  require("dotenv").config();
-}
-
 // Handles http requests (express is node js framework)
 const express = require("express");
 const app = express();

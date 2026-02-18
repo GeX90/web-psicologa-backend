@@ -1,3 +1,9 @@
+// ⚠️ PRIMERO: Cargar variables de entorno ANTES que cualquier otro módulo
+require("dotenv").config({ path: ".env.local" });
+if (!process.env.MONGODB_URI) {
+  require("dotenv").config();
+}
+
 const { connectDB } = require("./db");
 const app = require("./app");
 
