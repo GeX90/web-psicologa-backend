@@ -54,26 +54,7 @@ app.get("/api/health", async (req, res) => {
   res.status(state === 1 ? 200 : 503).json(info);
 });
 
-// � Endpoint temporal para promover usuario a ADMIN (protegido con TOKEN_SECRET)
-app.post("/api/promote-admin", async (req, res) => {
-  const { secret, email } = req.body;
-  if (secret !== process.env.TOKEN_SECRET) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-  const User = require("./models/User.model");
-  const user = await User.findOneAndUpdate(
-    { email: new RegExp(email, "i") },
-    { role: "ADMIN" },
-    { new: true }
-  ).select("-password");
-  if (!user) {
-    const all = await User.find().select("name email role -_id");
-    return res.status(404).json({ message: "Usuario no encontrado", users: all });
-  }
-  res.json({ message: "Usuario promovido a ADMIN", user });
-});
-
-// �👇 Start handling routes here
+// 👇 Start handling routes here
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
 
