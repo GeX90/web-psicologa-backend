@@ -1,9 +1,22 @@
 // Handles http requests (express is node js framework)
 const express = require("express");
 const app = express();
+const { connectDB } = require("./db");
 
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);
+
+// 🔌 Middleware: asegurar conexión a MongoDB ANTES de cualquier ruta
+// Esto es CRITICO para Vercel serverless - cada request debe tener la conexión lista
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("❌ DB middleware - conexión fallida:", err.message);
+    return res.status(503).json({ message: "Base de datos no disponible", error: err.message });
+  }
+});
 
 // 🏥 Health check para diagnosticar conexión a MongoDB
 app.get("/api/health", async (req, res) => {

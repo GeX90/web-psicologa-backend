@@ -25,17 +25,6 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
     });
 }
 
-// Exportar para Vercel: wrapper async que FUERZA la conexión DB
-// antes de que Express procese cualquier request
-module.exports = async (req, res) => {
-  try {
-    await connectDB();
-  } catch (err) {
-    console.error("❌ Vercel handler: DB connection failed:", err.message);
-    res.statusCode = 503;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ message: "Database connection failed", error: err.message }));
-    return;
-  }
-  return app(req, res);
-};
+// Exportar Express app directamente para Vercel
+// La conexión DB se maneja en el middleware dentro de app.js
+module.exports = app;
