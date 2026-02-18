@@ -17,6 +17,7 @@ const disponibilidadSchema = new Schema(
   },
   {
     timestamps: true,
+    bufferCommands: false,
   }
 );
 
