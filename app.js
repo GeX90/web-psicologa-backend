@@ -12,14 +12,14 @@ if (!process.env.MONGODB_URI) {
 const express = require("express");
 
 const app = express();
-// ℹ️ Connects to the database
-const { connectDB } = require("./db");
 
-// Connect to DB on startup (no bloquear si falla)
-connectDB().then(() => {
-    console.log("✓ Conexión inicial a MongoDB exitosa");
-}).catch(err => {
+// ℹ️ Connects to the database
+// La conexión real se hace en el middleware ensureDBConnection en cada request.
+// Esto evita que en Vercel las peticiones lleguen antes de tener conexión.
+const { connectDB } = require("./db");
+connectDB().catch(err => {
     console.error("✗ Error inicial de conexión a MongoDB:", err.message);
+    // No lanzar - el middleware reintentará en cada request
 });
 
 // 🔌 Middleware para asegurar conexión a MongoDB en cada request
