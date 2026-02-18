@@ -4,12 +4,14 @@ const router = express.Router();
 const User = require("../models/User.model");
 const Cita = require("../models/Cita.model");
 const Disponibilidad = require("../models/Disponibilidad.model");
+const { connectDB } = require("../db");
 
 const { isAuthenticated, isAdmin } = require("../middleware/jwt.middleware.js");
 
 // GET /api/admin/stats - Obtener estadísticas del dashboard (solo admin)
 router.get("/stats", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart);
@@ -77,6 +79,7 @@ router.get("/stats", isAuthenticated, isAdmin, async (req, res) => {
 // GET /api/admin/users - Obtener todos los usuarios (solo admin)
 router.get("/users", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const usuarios = await User.find().select("-password").sort({ createdAt: -1 });
     res.status(200).json(usuarios);
   } catch (error) {
@@ -88,6 +91,7 @@ router.get("/users", isAuthenticated, isAdmin, async (req, res) => {
 // GET /api/admin/users/:userId - Obtener un usuario específico (solo admin)
 router.get("/users/:userId", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { userId } = req.params;
     const usuario = await User.findById(userId).select("-password");
     
@@ -105,6 +109,7 @@ router.get("/users/:userId", isAuthenticated, isAdmin, async (req, res) => {
 // GET /api/admin/citas - Obtener todas las citas con información del usuario (solo admin)
 router.get("/citas", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const citas = await Cita.find()
       .populate("usuario", "name email")
       .sort({ fecha: 1 });
@@ -119,6 +124,7 @@ router.get("/citas", isAuthenticated, isAdmin, async (req, res) => {
 // GET /api/admin/citas/:citaId - Obtener una cita específica (solo admin)
 router.get("/citas/:citaId", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { citaId } = req.params;
     
     const cita = await Cita.findById(citaId).populate("usuario", "name email");
@@ -137,6 +143,7 @@ router.get("/citas/:citaId", isAuthenticated, isAdmin, async (req, res) => {
 // PUT /api/admin/citas/:citaId - Editar cualquier cita (solo admin)
 router.put("/citas/:citaId", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { citaId } = req.params;
     const { fecha, hora, motivo, notas, usuario } = req.body;
 
@@ -175,6 +182,7 @@ router.put("/citas/:citaId", isAuthenticated, isAdmin, async (req, res) => {
 // DELETE /api/admin/citas/:citaId - Eliminar cualquier cita (solo admin)
 router.delete("/citas/:citaId", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { citaId } = req.params;
 
     const cita = await Cita.findById(citaId);
@@ -195,6 +203,7 @@ router.delete("/citas/:citaId", isAuthenticated, isAdmin, async (req, res) => {
 // PUT /api/admin/users/:userId - Actualizar rol de usuario (solo admin)
 router.put("/users/:userId", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { userId } = req.params;
     const { role, name, email } = req.body;
 
@@ -226,6 +235,7 @@ router.put("/users/:userId", isAuthenticated, isAdmin, async (req, res) => {
 // DELETE /api/admin/users/:userId - Eliminar un usuario (solo admin)
 router.delete("/users/:userId", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { userId } = req.params;
 
     const usuario = await User.findById(userId);
@@ -251,11 +261,7 @@ router.delete("/users/:userId", isAuthenticated, isAdmin, async (req, res) => {
 // GET /api/admin/disponibilidad - Obtener disponibilidad para un rango de fechas
 router.get("/disponibilidad", isAuthenticated, isAdmin, async (req, res) => {
   try {
-    // Verificar que el modelo existe
-    if (!Disponibilidad) {
-      console.error("Modelo Disponibilidad no está disponible");
-      return res.status(200).json([]);
-    }
+    await connectDB();
 
     const { fechaInicio, fechaFin } = req.query;
     
@@ -281,6 +287,7 @@ router.get("/disponibilidad", isAuthenticated, isAdmin, async (req, res) => {
 // POST /api/admin/disponibilidad - Marcar hora como disponible/no disponible
 router.post("/disponibilidad", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { fecha, hora, disponible } = req.body;
 
     if (!fecha || !hora) {
@@ -321,6 +328,7 @@ router.post("/disponibilidad", isAuthenticated, isAdmin, async (req, res) => {
 // PUT /api/admin/disponibilidad/batch - Actualizar múltiples horarios
 router.put("/disponibilidad/batch", isAuthenticated, isAdmin, async (req, res) => {
   try {
+    await connectDB();
     const { horarios } = req.body; // Array de { fecha, hora, disponible }
 
     if (!Array.isArray(horarios) || horarios.length === 0) {

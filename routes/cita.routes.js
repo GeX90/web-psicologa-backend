@@ -3,20 +3,14 @@ const router = express.Router();
 const mongoose = require("mongoose");
 
 const Cita = require("../models/Cita.model");
+const Disponibilidad = require("../models/Disponibilidad.model");
+const { connectDB } = require("../db");
 
 const { isAuthenticated } = require("../middleware/jwt.middleware.js");
 
-// Cargar el modelo de forma segura
-let Disponibilidad;
-try {
-  Disponibilidad = require("../models/Disponibilidad.model");
-  console.log("Modelo Disponibilidad cargado correctamente en cita.routes.js");
-} catch (error) {
-  console.error("Error cargando modelo Disponibilidad:", error.message);
-}
-
 router.get("/disponibles", async (req, res) => {
   try {
+    await connectDB();
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
@@ -70,6 +64,7 @@ router.get("/disponibles", async (req, res) => {
 
 router.get("/", isAuthenticated, async (req, res) => {
   try {
+    await connectDB();
     const usuarioId = req.payload._id;
     const esAdmin = req.payload.role === "ADMIN";
 
@@ -93,6 +88,7 @@ router.get("/", isAuthenticated, async (req, res) => {
 
 router.get("/available/:date", isAuthenticated, async (req, res) => {
   try {
+    await connectDB();
     const { date } = req.params;
 
     const fechaDate = new Date(date);
@@ -153,14 +149,7 @@ router.get("/available/:date", isAuthenticated, async (req, res) => {
 // IMPORTANTE: Esta ruta debe estar ANTES de /:citaId para evitar que el parámetro dinámico la capture
 router.get("/disponibilidad", async (req, res) => {
   try {
-    
-    if (!Disponibilidad) {
-      console.error("Modelo Disponibilidad no está disponible");
-      return res.status(503).json({ 
-        message: "Servicio no disponible temporalmente",
-        error: "Modelo Disponibilidad no cargado" 
-      });
-    }
+    await connectDB();
 
     // Construir el filtro base
     const filtro = { disponible: true };
@@ -203,6 +192,7 @@ router.get("/disponibilidad", async (req, res) => {
 
 router.get("/:citaId", isAuthenticated, async (req, res) => {
   try {
+    await connectDB();
     const { citaId } = req.params;
     const usuarioId = req.payload._id;
     const esAdmin = req.payload.role === "ADMIN";
@@ -231,6 +221,7 @@ router.get("/:citaId", isAuthenticated, async (req, res) => {
 
 router.post("/", isAuthenticated, async (req, res) => {
   try {
+    await connectDB();
     const { fecha, hora, motivo, notas } = req.body;
     const usuarioId = req.payload._id;
 
@@ -264,6 +255,7 @@ router.post("/", isAuthenticated, async (req, res) => {
 
 router.put("/:citaId", isAuthenticated, async (req, res) => {
   try {
+    await connectDB();
     const { citaId } = req.params;
     const { fecha, hora, motivo, notas } = req.body;
     const usuarioId = req.payload._id;
@@ -329,6 +321,7 @@ router.put("/:citaId", isAuthenticated, async (req, res) => {
 
 router.delete("/:citaId", isAuthenticated, async (req, res) => {
   try {
+    await connectDB();
     const { citaId } = req.params;
     const usuarioId = req.payload._id;
     const esAdmin = req.payload.role === "ADMIN";
