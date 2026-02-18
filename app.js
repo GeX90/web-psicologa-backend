@@ -29,6 +29,42 @@ app.use(ensureDBConnection);
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 require("./config")(app);
 
+// 🏥 Health check para diagnosticar conexión a MongoDB
+app.get("/api/health", async (req, res) => {
+  const mongoose = require("mongoose");
+  const state = mongoose.connection.readyState;
+  const stateMap = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
+  
+  const info = {
+    status: state === 1 ? "ok" : "error",
+    mongodb: {
+      readyState: state,
+      readyStateText: stateMap[state] || "unknown",
+      host: mongoose.connection.host || "none",
+      name: mongoose.connection.name || "none",
+    },
+    env: {
+      MONGODB_URI_SET: !!process.env.MONGODB_URI,
+      NODE_ENV: process.env.NODE_ENV || "not set",
+      VERCEL: !!process.env.VERCEL,
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  // Intentar ping
+  if (state === 1) {
+    try {
+      await mongoose.connection.db.admin().ping();
+      info.mongodb.ping = "ok";
+    } catch (e) {
+      info.mongodb.ping = "failed: " + e.message;
+      info.status = "error";
+    }
+  }
+
+  res.status(state === 1 ? 200 : 503).json(info);
+});
+
 // 👇 Start handling routes here
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
