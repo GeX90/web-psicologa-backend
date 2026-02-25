@@ -4,6 +4,9 @@ const router = express.Router();
 // ℹ️ Handles password encryption
 const bcrypt = require("bcrypt");
 
+// Servicio de emails
+const { sendWelcomeEmail } = require("../services/mailer");
+
 // ℹ️ Handles password encryption
 const jwt = require("jsonwebtoken");
 
@@ -62,6 +65,11 @@ router.post("/signup", async (req, res, next) => {
 
     // Create a new object that doesn't expose the password
     const user = { email: createdUser.email, name: createdUser.name, _id: createdUser._id, role: createdUser.role };
+
+    // Enviar email de bienvenida (no bloquea la respuesta)
+    sendWelcomeEmail({ name: createdUser.name, email: createdUser.email }).catch((err) =>
+      console.error("Error enviando email de bienvenida:", err.message)
+    );
 
     res.status(201).json({ user: user });
   } catch (err) {

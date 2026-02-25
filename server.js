@@ -6,6 +6,7 @@ if (!process.env.MONGODB_URI) {
 
 const { connectDB } = require("./db");
 const app = require("./app");
+const { startReminderCron } = require("./cron/reminderCron");
 
 // ℹ️ Sets the PORT for our app to have access to it. If no env has been set, we hard code it to 5005
 const PORT = process.env.PORT || 5005;
@@ -18,6 +19,9 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
       app.listen(PORT, () => {
         console.log(`Server listening on http://localhost:${PORT}`);
       });
+
+      // Iniciar el cron de recordatorios (solo en entornos con servidor persistente)
+      startReminderCron();
     })
     .catch((err) => {
       console.error("Failed to connect to MongoDB:", err.message);

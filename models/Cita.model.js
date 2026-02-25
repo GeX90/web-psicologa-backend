@@ -22,6 +22,10 @@ const citaSchema = new Schema(
       ref: "User",
       required: true,
     },
+    reminderSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

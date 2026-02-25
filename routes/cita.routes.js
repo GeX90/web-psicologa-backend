@@ -3,10 +3,18 @@ const router = express.Router();
 const mongoose = require("mongoose");
 
 const Cita = require("../models/Cita.model");
+const User = require("../models/User.model");
 const Disponibilidad = require("../models/Disponibilidad.model");
 const { connectDB } = require("../db");
 
 const { isAuthenticated } = require("../middleware/jwt.middleware.js");
+
+// Servicio de emails
+const {
+  sendCitaConfirmationEmail,
+  sendCitaEditadaEmail,
+  sendCitaCanceladaEmail,
+} = require("../services/mailer");
 
 router.get("/disponibles", async (req, res) => {
   try {
@@ -244,6 +252,15 @@ router.post("/", isAuthenticated, async (req, res) => {
       usuario: usuarioId,
     });
 
+    // Enviar email de confirmación al usuario
+    const usuario = await User.findById(usuarioId).select("name email");
+    if (usuario) {
+      sendCitaConfirmationEmail(
+        { name: usuario.name, email: usuario.email },
+        nuevaCita
+      ).catch((err) => console.error("Error enviando email confirmación cita:", err.message));
+    }
+
     res.status(201).json(nuevaCita);
   } catch (error) {
     console.error(error);
@@ -310,6 +327,15 @@ router.put("/:citaId", isAuthenticated, async (req, res) => {
       await cita.populate("usuario", "name email");
     }
 
+    // Enviar email de confirmación de edición al usuario (siempre)
+    const usuarioEdicion = await User.findById(cita.usuario).select("name email");
+    if (usuarioEdicion) {
+      sendCitaEditadaEmail(
+        { name: usuarioEdicion.name, email: usuarioEdicion.email },
+        cita
+      ).catch((err) => console.error("Error enviando email edición cita:", err.message));
+    }
+
     res.status(200).json(cita);
   } catch (error) {
     console.error(error);
@@ -354,7 +380,23 @@ router.delete("/:citaId", isAuthenticated, async (req, res) => {
       }
     }
 
+    // Guardar datos de la cita antes de eliminar para el email
+    const datosParaEmail = {
+      fecha: cita.fecha,
+      hora: cita.hora,
+      motivo: cita.motivo,
+    };
+    const usuarioCancelacion = await User.findById(cita.usuario).select("name email");
+
     await Cita.findByIdAndDelete(citaId);
+
+    // Enviar email de cancelación al usuario
+    if (usuarioCancelacion) {
+      sendCitaCanceladaEmail(
+        { name: usuarioCancelacion.name, email: usuarioCancelacion.email },
+        datosParaEmail
+      ).catch((err) => console.error("Error enviando email cancelación cita:", err.message));
+    }
 
     res.status(200).json({ message: "Cita eliminada correctamente" });
   } catch (error) {

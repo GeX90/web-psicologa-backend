@@ -67,6 +67,9 @@ app.use("/api/citas", citaRoutes);
 const adminRoutes = require("./routes/admin.routes");
 app.use("/api/admin", adminRoutes);
 
+const cronRoutes = require("./routes/cron.routes");
+app.use("/api/cron", cronRoutes);
+
 
 
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
